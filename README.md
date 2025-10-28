@@ -5,9 +5,22 @@ O objetivo é construir uma **pipeline ELT em arquitetura Medallion (Bronze → 
 utilizando **Prefect 1.4.1** e **Google Cloud (GCS + BigQuery)** para ingestão, armazenamento e transformação de dados do BRT em tempo real.
 
 
----
+## 📋 Índice
 
-## ⚙️ Ambiente e Ferramentas
+- [Ambiente e Ferramentas](#tools)  
+- [Setup do Ambiente de Desenvolvimento Local](#setup)
+  - [1. Pré-requisitos](#setup1)
+  - [2. Criação do ambiente virtual](#setup2)
+  - [3. Instalar dependências](#setup3)
+  - [4. Configuração do Docker](#setup4)
+  - [5. Subir o Prefect Server Local e Iniciar o server](#setup5)
+
+
+
+---
+<a name="tools"/>
+
+##  ⚙️ Ambiente e Ferramentas
 
 | Componente | Versão | Função |
 |-------------|---------|--------|
@@ -15,11 +28,14 @@ utilizando **Prefect 1.4.1** e **Google Cloud (GCS + BigQuery)** para ingestão,
 | **Prefect** | 1.4.1 | Orquestração da pipeline |
 | **Docker / Docker Compose** | 4.4.4 / 1.29.2 | Infraestrutura local e agente |
 | **Google Cloud SDK** | latest | Armazenamento e consultas |
-| **DBT (BigQuery Adapter)** | latest | Modelagem das camadas Silver/Gold |
+| **DBT (Data Build Tool)** | latest | Transformação de dados no BigQuery |
 
 ---
+<a name="setup"/>
 
-## ⚙️ Setup do Ambiente Local
+## ⚙️ Setup do Ambiente de Desenvolvimento Local
+
+<a name="setup1"/>
 
 ### 1. Pré-requisitos
 
@@ -28,7 +44,7 @@ utilizando **Prefect 1.4.1** e **Google Cloud (GCS + BigQuery)** para ingestão,
 - Autentcar Google Cloud SDK
 - Habilitar Conta BigQuery 
 
----
+<a name="setup2"/>
 
 ### 2. Criação do ambiente virtual
 
@@ -36,7 +52,7 @@ utilizando **Prefect 1.4.1** e **Google Cloud (GCS + BigQuery)** para ingestão,
 python3.10 -m venv venv
 source venv/bin/activate
 ```
----
+<a name="setup3"/>
 
 ### 3. Instalar dependências
 
@@ -47,36 +63,21 @@ Instale as dependências a partir do arquivo requirements.txt:
 pip install --upgrade pip setuptools wheel
 pip install -r requirements.txt
 ```
----
+<a name="setup4"/>
 
 ### 4. Configuração do Docker 
 
-#### Para Linux
-
-O Prefect se conecta diretamente ao daemon do Docker via socket padrão do Linux:
+Linux:
 ```bash
 export DOCKER_HOST=unix:///var/run/docker.sock
-```
-Verifique se o daemon está ativo:
-
-```
-sudo systemctl status docker
-```
-
-Caso não esteja, inicie com:
-```
 sudo systemctl start docker
 ```
 
-#### Para macOS (Apple Silicon)
-
-Defina o caminho correto para o Docker:
-
+MacOS (Apple Silicon):
 ```
 export DOCKER_HOST=unix://$HOME/.docker/run/docker.sock
 ```
 
-Ambos Linux e macOS:
 Verifique se o Docker está acessível:
 
 ```
@@ -88,18 +89,25 @@ Se o comando listar containers, o daemon do Docker está ativo e acessível ✅.
 💡 Dica: adicione o comando de export DOCKER_HOST ao seu ~/.zshrc (macOS) ou ~/.bashrc (Linux)
 para que a configuração seja carregada automaticamente em novos terminais.
 
----
+<a name="setup5"/>
 
 ### 5. Subir o Prefect Server Local e Iniciar o server
+
+Execute:
 ```
 prefect backend server
 ```
 ```
 prefect server start
 ```
----
 
-### 6. Testar que ambiente foi criado
+Você deve ver a mensagem:
+```
 Visit http://localhost:8080 to get started, or check out the docs at https://docs.prefect.io
+```
 
+### 6. Variáveis de ambiente 
+
+Para rodar localmente, copie o arquivo .env.example para .env e atualize o caminho da chave JSON caso tenha uma Service Account própria.
+Caso não possua acesso ao GCP, é possível testar o pipeline apenas até a etapa de geração do CSV localmente.
 
