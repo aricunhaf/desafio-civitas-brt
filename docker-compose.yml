@@ -1,0 +1,38 @@
+services:
+  prefect-server:
+    image: prefecthq/prefect:1.4.1-python3.9
+    platform: linux/amd64
+    command: >
+      bash -c "
+      prefect backend server &&
+      prefect server start
+      "
+    ports:
+      - "4200:4200"
+      - "8080:8080"
+    environment:
+      - PREFECT__BACKEND=server
+      - PREFECT__UI__PORT=4200
+    volumes:
+      - prefect_data:/root/.prefect
+
+  prefect-agent:
+    image: prefecthq/prefect:1.4.1-python3.9
+    platform: linux/amd64
+    depends_on:
+      - prefect-server
+    command: >
+      bash -c "
+      prefect backend server &&
+      sleep 20 &&
+      prefect agent docker start --name local-agent
+      "
+    environment:
+      - PREFECT__BACKEND=server
+      - PREFECT__SERVER__HOST=http://prefect-server:4200
+    volumes:
+      - prefect_data:/root/.prefect
+      - /var/run/docker.sock:/var/run/docker.sock
+
+volumes:
+  prefect_data:
