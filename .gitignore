@@ -1,7 +1,16 @@
+# Ambientes virtuais
 venv310/
-__pycache__/
-*.pyc
+venv/
 .env
+__pycache__/
+
+# Dados temporários e outputs
 data/
-.idea/
+*.csv
+*.pyc
+*.log
+
+# Arquivos de sistema
 .DS_Store
+.idea/
+.vscode/
