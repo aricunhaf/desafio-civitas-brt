@@ -5,7 +5,7 @@ O objetivo é construir uma **pipeline ELT em arquitetura Medallion (Bronze → 
 utilizando **Prefect 1.4.1** e **Google Cloud (GCS + BigQuery)** para ingestão, armazenamento e transformação de dados do BRT em tempo real.
 
 
-## 📋 Índice
+### 📋 Índice
 
 - [Ambiente e Ferramentas](#tools)  
 - [Setup do Ambiente de Desenvolvimento Local](#setup)
@@ -14,13 +14,14 @@ utilizando **Prefect 1.4.1** e **Google Cloud (GCS + BigQuery)** para ingestão,
   - [3. Instalar dependências](#setup3)
   - [4. Configuração do Docker](#setup4)
   - [5. Subir o Prefect Server Local e Iniciar o server](#setup5)
+  - [6. Variáveis de ambiente e credenciais GCP](#setup6)
 
 
 
 ---
 <a name="tools"/>
 
-##  ⚙️ Ambiente e Ferramentas
+###  ⚙️ Ambiente e Ferramentas
 
 | Componente | Versão | Função |
 |-------------|---------|--------|
@@ -33,20 +34,22 @@ utilizando **Prefect 1.4.1** e **Google Cloud (GCS + BigQuery)** para ingestão,
 ---
 <a name="setup"/>
 
-## ⚙️ Setup do Ambiente de Desenvolvimento Local
+### ⚙️ Setup do Ambiente de Desenvolvimento Local
 
 <a name="setup1"/>
 
-### 1. Pré-requisitos
+#### 1. Pré-requisitos
 
-- Instalar e ativar Docker Desktop
-- Instalar Python 3.10 
-- Autentcar Google Cloud SDK
-- Habilitar Conta BigQuery 
+- Instalar e ativar **Docker Desktop**
+- Instalar **Python 3.10**
+- Autenticar o **Google Cloud SDK** (`gcloud auth login`)
+- Habilitar as APIs:
+  - **Cloud Storage API**
+  - **BigQuery API**
 
 <a name="setup2"/>
 
-### 2. Criação do ambiente virtual
+#### 2. Criação do ambiente virtual
 
 ```bash
 python3.10 -m venv venv
@@ -54,18 +57,18 @@ source venv/bin/activate
 ```
 <a name="setup3"/>
 
-### 3. Instalar dependências
+#### 3. Instalar dependências
 
 As versões foram fixadas para garantir compatibilidade com Prefect 1.4.1 e macOS ARM.
 Instale as dependências a partir do arquivo requirements.txt:
 
 ```
 pip install --upgrade pip setuptools wheel
-pip install -r requirements.txt
+pip install -r requirements.txt --no-deps
 ```
 <a name="setup4"/>
 
-### 4. Configuração do Docker 
+#### 4. Configuração do Docker 
 
 Linux:
 ```bash
@@ -91,7 +94,7 @@ para que a configuração seja carregada automaticamente em novos terminais.
 
 <a name="setup5"/>
 
-### 5. Subir o Prefect Server Local e Iniciar o server
+#### 5. Subir o Prefect Server Local e Iniciar o server
 
 Execute:
 ```
@@ -105,9 +108,43 @@ Você deve ver a mensagem:
 ```
 Visit http://localhost:8080 to get started, or check out the docs at https://docs.prefect.io
 ```
+<a name="setup6"/>
 
-### 6. Variáveis de ambiente 
+#### 6. Variáveis de ambiente e credenciais GCP
 
-Para rodar localmente, copie o arquivo .env.example para .env e atualize o caminho da chave JSON caso tenha uma Service Account própria.
-Caso não possua acesso ao GCP, é possível testar o pipeline apenas até a etapa de geração do CSV localmente.
+Para rodar localmente, copie o arquivo .env.example para .env e atualize os valores conforme sua configuração:
+```
+GCP_PROJECT=desafio-civitas-brt-ari
+GCS_BUCKET=civitas-brt-data-ari
+GOOGLE_APPLICATION_CREDENTIALS=/Users/<usuario>/desafio-civitas-brt-ari/prefect-gcp-access-xxxx.json
+```
+
+Caso não possua acesso ao GCP, é possível testar o pipeline apenas até a geração dos arquivos CSV locais.
+
+🔐 Configuração de credenciais GCP para o DBT e Prefect
+
+Tanto o Prefect quanto o DBT utilizam a mesma conta de serviço (Service Account)
+para acessar o Google Cloud Storage (GCS) e o BigQuery.
+
+No arquivo profiles.yml do DBT, o caminho da credencial é definido dinamicamente usando a variável de ambiente:
+```
+keyfile: "{{ env_var('GOOGLE_APPLICATION_CREDENTIALS') }}"
+```
+Isso garante segurança e portabilidade, evitando caminhos hardcoded.
+
+Antes de rodar o DBT, carregue o .env:
+```
+source venv310/bin/activate
+export $(grep -v '^#' .env | xargs)
+```
+
+Em seguida, execute:
+```
+cd dbt_project
+dbt run
+dbt test
+```
+ℹ️ Todas as variáveis de ambiente (GCP, Prefect e DBT) são centralizadas no arquivo .env para garantir segurança e facilidade de configuração.
+
+
 
