@@ -7,7 +7,8 @@ utilizando **Prefect 1.4.1** e **Google Cloud (GCS + BigQuery)** para ingestão,
 
 ### 📋 Índice
 
-- [Ambiente e Ferramentas](#tools)  
+- [Ambiente e Ferramentas](#tools)
+- [Arquitetura](arquitecture)
 - [Setup do Ambiente de Desenvolvimento Local](#setup)
   - [1. Pré-requisitos](#setup1)
   - [2. Criação do ambiente virtual](#setup2)
@@ -16,12 +17,10 @@ utilizando **Prefect 1.4.1** e **Google Cloud (GCS + BigQuery)** para ingestão,
   - [5. Subir o Prefect Server Local e Iniciar o server](#setup5)
   - [6. Variáveis de ambiente e credenciais GCP](#setup6)
 
-
-
 ---
 <a name="tools"/>
 
-###  ⚙️ Ambiente e Ferramentas
+####  ⚙️ Ambiente e Ferramentas
 
 | Componente | Versão | Função |
 |-------------|---------|--------|
@@ -30,7 +29,54 @@ utilizando **Prefect 1.4.1** e **Google Cloud (GCS + BigQuery)** para ingestão,
 | **Docker / Docker Compose** | 4.4.4 / 1.29.2 | Infraestrutura local e agente |
 | **Google Cloud SDK** | latest | Armazenamento e consultas |
 | **DBT (Data Build Tool)** | latest | Transformação de dados no BigQuery |
+---
+<a name="arquitecture"/>
+### Arquitetura
 
+#### Arquitetura das Pipelines
+Os pipelines seguem o padrão ELT orquestrado pelo Prefect.
+
+#### Arquitetura das Queries (DBT)
+As transformações de dados utilizam **DBT (Data Build Tool)**.
+
+#### Estrutura de Diretórios
+dbt_project/
+├── dbt_project.yml           # Configuração do projeto DBT
+├── packages.yml              # Pacotes DBT externos (dbt_utils, dbt_expectations, elementary)
+├── models/
+│   ├── bronze/               # Camada Bronze - dados brutos (tabela externa BigQuery)
+│   │   └── external_brt_data.sql
+│   ├── silver/               # Camada Silver - limpeza e normalização
+│   │   └── consolidated_brt_data.sql
+│   ├── gold/                 # Camada Gold - agregações e métricas
+│   │   └── vehicles_dashboard.sql
+│   └── schema.yml            # Documentação e testes de qualidade
+└── tests/                    # Testes customizados adicionais
+
+#### Camadas de modelagem
+
+- Bronze: Dados brutos ingeridos do GCS (Google Cloud Storage) e disponibilizados no BigQuery como tabela externa.	`models/bronze/external_brt_data.sql`
+- Silver:	Dados limpos, normalizados e enriquecidos.	`models/silver/consolidated_brt_data.sql`
+- Gold:	Métricas e agregações prontas para consumo.	`models/gold/vehicles_dashboard.sql`
+
+#### Documentação e Testes
+
+Os arquivos .yml contêm documentação detalhada de cada modelo e testes de qualidade com dbt_expectations, garantindo integridade e consistência dos dados.
+As descrições são propagadas automaticamente para o BigQuery via +persist_docs.
+
+Exemplo (trecho de models/schema.yml):
+```
+models:
+  - name: consolidated_brt_data
+    description: "Camada Silver com dados normalizados e enriquecidos do BRT."
+    tests:
+      - dbt_expectations.expect_table_row_count_to_be_between:
+          arguments:
+            min_value: 1
+      - dbt_expectations.expect_column_values_to_not_be_null:
+          arguments:
+            column_name: codigo
+```
 ---
 <a name="setup"/>
 
