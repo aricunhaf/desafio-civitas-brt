@@ -4,11 +4,19 @@ Este repositório contém a implementação do desafio técnico para a vaga de *
 O objetivo é construir uma **pipeline ELT em arquitetura Medallion (Bronze → Silver → Gold)**,  
 utilizando **Prefect 1.4.1** e **Google Cloud (GCS + BigQuery)** para ingestão, armazenamento e transformação de dados do BRT em tempo real.
 
+<a name="docs"/>
 
-### 📋 Índice
+### Documentação e Testes
+
+## 📋 Índice
 
 - [Ambiente e Ferramentas](#tools)
 - [Arquitetura](arquitecture)
+  - [Arquitetura das Pipelines](#pipelines)
+  - [Arquitetura das Queries](#dbt)
+  - [Estrutura de Diretórios](#directories)
+  - [Camadas de modelagem](#model)
+  - [Documentação e Testes](#docs)
 - [Setup do Ambiente de Desenvolvimento Local](#setup)
   - [1. Pré-requisitos](#setup1)
   - [2. Criação do ambiente virtual](#setup2)
@@ -20,7 +28,7 @@ utilizando **Prefect 1.4.1** e **Google Cloud (GCS + BigQuery)** para ingestão,
 ---
 <a name="tools"/>
 
-####  ⚙️ Ambiente e Ferramentas
+###  ⚙️ Ambiente e Ferramentas
 
 | Componente | Versão | Função |
 |-------------|---------|--------|
@@ -31,15 +39,22 @@ utilizando **Prefect 1.4.1** e **Google Cloud (GCS + BigQuery)** para ingestão,
 | **DBT (Data Build Tool)** | latest | Transformação de dados no BigQuery |
 ---
 <a name="arquitecture"/>
-### Arquitetura
 
-#### Arquitetura das Pipelines
+## Arquitetura
+
+<a name="pipelines"/>
+
+### Arquitetura das Pipelines
 Os pipelines seguem o padrão ELT orquestrado pelo Prefect.
 
-#### Arquitetura das Queries (DBT)
+<a name="dbt"/>
+
+### Arquitetura das Queries (DBT)
 As transformações de dados utilizam **DBT (Data Build Tool)**.
 
-#### Estrutura de Diretórios
+<a name="directories"/>
+
+### Estrutura de Diretórios
 dbt_project/
 ├── dbt_project.yml           # Configuração do projeto DBT
 ├── packages.yml              # Pacotes DBT externos (dbt_utils, dbt_expectations, elementary)
@@ -53,13 +68,17 @@ dbt_project/
 │   └── schema.yml            # Documentação e testes de qualidade
 └── tests/                    # Testes customizados adicionais
 
-#### Camadas de modelagem
+<a name="model"/>
+
+### Camadas de modelagem
 
 - Bronze: Dados brutos ingeridos do GCS (Google Cloud Storage) e disponibilizados no BigQuery como tabela externa.	`models/bronze/external_brt_data.sql`
 - Silver:	Dados limpos, normalizados e enriquecidos.	`models/silver/consolidated_brt_data.sql`
 - Gold:	Métricas e agregações prontas para consumo.	`models/gold/vehicles_dashboard.sql`
 
-#### Documentação e Testes
+<a name="docs"/>
+
+### Documentação e Testes
 
 Os arquivos .yml contêm documentação detalhada de cada modelo e testes de qualidade com dbt_expectations, garantindo integridade e consistência dos dados.
 As descrições são propagadas automaticamente para o BigQuery via +persist_docs.
@@ -80,11 +99,11 @@ models:
 ---
 <a name="setup"/>
 
-### ⚙️ Setup do Ambiente de Desenvolvimento Local
+## ⚙️ Setup do Ambiente de Desenvolvimento Local
 
 <a name="setup1"/>
 
-#### 1. Pré-requisitos
+### 1. Pré-requisitos
 
 - Instalar e ativar **Docker Desktop**
 - Instalar **Python 3.10**
@@ -95,7 +114,7 @@ models:
 
 <a name="setup2"/>
 
-#### 2. Criação do ambiente virtual
+### 2. Criação do ambiente virtual
 
 ```bash
 python3.10 -m venv venv
@@ -103,7 +122,7 @@ source venv/bin/activate
 ```
 <a name="setup3"/>
 
-#### 3. Instalar dependências
+### 3. Instalar dependências
 
 As versões foram fixadas para garantir compatibilidade com Prefect 1.4.1 e macOS ARM.
 Instale as dependências a partir do arquivo requirements.txt:
@@ -114,7 +133,7 @@ pip install -r requirements.txt --no-deps
 ```
 <a name="setup4"/>
 
-#### 4. Configuração do Docker 
+### 4. Configuração do Docker 
 
 Linux:
 ```bash
@@ -133,14 +152,14 @@ Verifique se o Docker está acessível:
 docker ps
 ```
 
-Se o comando listar containers, o daemon do Docker está ativo e acessível ✅.
+Se o comando listar containers, o daemon do Docker está ativo e acessível.
 
-💡 Dica: adicione o comando de export DOCKER_HOST ao seu ~/.zshrc (macOS) ou ~/.bashrc (Linux)
+Dica: adicione o comando de export DOCKER_HOST ao seu ~/.zshrc (macOS) ou ~/.bashrc (Linux)
 para que a configuração seja carregada automaticamente em novos terminais.
 
 <a name="setup5"/>
 
-#### 5. Subir o Prefect Server Local e Iniciar o server
+### 5. Subir o Prefect Server Local e Iniciar o server
 
 Execute:
 ```
@@ -156,7 +175,7 @@ Visit http://localhost:8080 to get started, or check out the docs at https://doc
 ```
 <a name="setup6"/>
 
-#### 6. Variáveis de ambiente e credenciais GCP
+### 6. Variáveis de ambiente e credenciais GCP
 
 Para rodar localmente, copie o arquivo .env.example para .env e atualize os valores conforme sua configuração:
 ```
@@ -167,7 +186,7 @@ GOOGLE_APPLICATION_CREDENTIALS=/Users/<usuario>/desafio-civitas-brt-ari/prefect-
 
 Caso não possua acesso ao GCP, é possível testar o pipeline apenas até a geração dos arquivos CSV locais.
 
-🔐 Configuração de credenciais GCP para o DBT e Prefect
+#### Configuração de credenciais GCP para o DBT e Prefect
 
 Tanto o Prefect quanto o DBT utilizam a mesma conta de serviço (Service Account)
 para acessar o Google Cloud Storage (GCS) e o BigQuery.
