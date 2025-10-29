@@ -4,6 +4,12 @@ venv/
 .env
 __pycache__/
 
+# Dados temporários e outputs
+data/
+*.csv
+*.pyc
+*.log
+
 # Arquivos de sistema
 .DS_Store
 .idea/
