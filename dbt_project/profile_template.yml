@@ -1,0 +1,15 @@
+# profiles_template.yml
+# Copie este arquivo para ~/.dbt/profiles.yml e ajuste o caminho do keyfile.
+
+civitas_brt:
+  target: dev
+  outputs:
+    dev:
+      type: bigquery
+      method: service-account
+      project: desafio-civitas-brt-ari
+      dataset: brt_data
+      keyfile: /path/to/your/service-account.json
+
+#TODO: adicionar algo no read me de intrucao de como usar isso
+#cp dbt_project/profiles_template.yml ~/.dbt/profiles.yml

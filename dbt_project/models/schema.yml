@@ -1,0 +1,68 @@
+version: 2
+
+sources:
+  - name: brt_bronze
+    description: "Camada Bronze - tabela externa no BigQuery com dados brutos do BRT."
+    database: desafio-civitas-brt-ari
+    tables:
+      - name: external_brt_data
+        description: "Tabela externa vinculada aos CSVs do bucket GCS (civitas-brt-data-ari)."
+
+models:
+  - name: external_brt_data
+    description: "Camada Bronze - Tabela externa no BigQuery com dados brutos do BRT armazenados no GCS."
+    columns:
+      - name: codigo
+        description: "Identificador único do veículo."
+        tests:
+          - not_null
+      - name: latitude
+        description: "Latitude do veículo."
+      - name: longitude
+        description: "Longitude do veículo."
+      - name: velocidade
+        description: "Velocidade instantânea do veículo (km/h)."
+
+  - name: consolidated_brt_data
+    description: "Camada Silver - Dados limpos e normalizados do BRT."
+    tests:
+      - dbt_expectations.expect_table_row_count_to_be_between:
+          min_value: 1
+      - dbt_expectations.expect_column_values_to_not_be_null:
+          column_name: codigo
+      - dbt_expectations.expect_column_values_to_be_between:
+          column_name: latitude
+          min_value: -25
+          max_value: -22
+      - dbt_expectations.expect_column_values_to_be_between:
+          column_name: longitude
+          min_value: -45
+          max_value: -42
+    columns:
+      - name: codigo
+        description: "Identificador único do veículo."
+      - name: linha
+        description: "Código da linha operada pelo veículo."
+      - name: data_hora
+        description: "Timestamp UTC da posição do veículo."
+
+  - name: vehicles_dashboard
+    description: "Camada Gold - Métricas agregadas por linha e sentido."
+    tests:
+      - dbt_expectations.expect_table_row_count_to_be_between:
+          min_value: 1
+      - dbt_expectations.expect_column_values_to_be_between:
+          column_name: velocidade_media
+          min_value: 0
+          max_value: 200
+    columns:
+      - name: linha
+        description: "Serviço operado pelo veículo."
+      - name: sentido
+        description: "Direção da viagem (ida/volta)."
+      - name: total_veiculos
+        description: "Número de veículos distintos em operação."
+      - name: velocidade_media
+        description: "Velocidade média agregada por linha e sentido."
+      - name: ultima_atualizacao
+        description: "Último horário de atualização registrado."
