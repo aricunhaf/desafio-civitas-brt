@@ -4,19 +4,26 @@ Este repositório contém a implementação do desafio técnico para a vaga de *
 O objetivo é construir uma **pipeline ELT em arquitetura Medallion (Bronze → Silver → Gold)**,  
 utilizando **Prefect 1.4.1** e **Google Cloud (GCS + BigQuery)** para ingestão, armazenamento e transformação de dados do BRT em tempo real.
 
+<a name="docs"/>
 
-### 📋 Índice
+### Documentação e Testes
 
-- [Ambiente e Ferramentas](#tools)  
-- [Setup do Ambiente de Desenvolvimento Local](#setup)
+## 📋 Índice
+
+- [Ambiente e Ferramentas](#tools)
+- [Arquitetura](arquitecture)
+  - [Arquitetura das Pipelines](#pipelines)
+  - [Arquitetura das Queries](#dbt)
+  - [Estrutura de Diretórios](#directories)
+  - [Camadas de modelagem](#model)
+  - [Documentação e Testes](#docs)
+- [Instruções para Execução Local](#setup)
   - [1. Pré-requisitos](#setup1)
   - [2. Criação do ambiente virtual](#setup2)
   - [3. Instalar dependências](#setup3)
   - [4. Configuração do Docker](#setup4)
   - [5. Subir o Prefect Server Local e Iniciar o server](#setup5)
   - [6. Variáveis de ambiente e credenciais GCP](#setup6)
-
-
 
 ---
 <a name="tools"/>
@@ -30,15 +37,73 @@ utilizando **Prefect 1.4.1** e **Google Cloud (GCS + BigQuery)** para ingestão,
 | **Docker / Docker Compose** | 4.4.4 / 1.29.2 | Infraestrutura local e agente |
 | **Google Cloud SDK** | latest | Armazenamento e consultas |
 | **DBT (Data Build Tool)** | latest | Transformação de dados no BigQuery |
+---
+<a name="arquitecture"/>
 
+## Arquitetura
+
+<a name="pipelines"/>
+
+### Arquitetura das Pipelines
+Os pipelines seguem o padrão ELT orquestrado pelo Prefect.
+
+<a name="dbt"/>
+
+### Arquitetura das Queries (DBT)
+As transformações de dados utilizam **DBT (Data Build Tool)**.
+
+<a name="directories"/>
+
+### Estrutura de Diretórios
+dbt_project/
+├── dbt_project.yml           # Configuração do projeto DBT
+├── packages.yml              # Pacotes DBT externos (dbt_utils, dbt_expectations, elementary)
+├── models/
+│   ├── bronze/               # Camada Bronze - dados brutos (tabela externa BigQuery)
+│   │   └── external_brt_data.sql
+│   ├── silver/               # Camada Silver - limpeza e normalização
+│   │   └── consolidated_brt_data.sql
+│   ├── gold/                 # Camada Gold - agregações e métricas
+│   │   └── vehicles_dashboard.sql
+│   └── schema.yml            # Documentação e testes de qualidade
+└── tests/                    # Testes customizados adicionais
+
+<a name="model"/>
+
+### Camadas de modelagem
+
+- Bronze: Dados brutos ingeridos do GCS (Google Cloud Storage) e disponibilizados no BigQuery como tabela externa.	`models/bronze/external_brt_data.sql`
+- Silver:	Dados limpos, normalizados e enriquecidos.	`models/silver/consolidated_brt_data.sql`
+- Gold:	Métricas e agregações prontas para consumo.	`models/gold/vehicles_dashboard.sql`
+
+<a name="docs"/>
+
+### Documentação e Testes
+
+Os arquivos .yml contêm documentação detalhada de cada modelo e testes de qualidade com dbt_expectations, garantindo integridade e consistência dos dados.
+As descrições são propagadas automaticamente para o BigQuery via +persist_docs.
+
+Exemplo (trecho de models/schema.yml):
+```
+models:
+  - name: consolidated_brt_data
+    description: "Camada Silver com dados normalizados e enriquecidos do BRT."
+    tests:
+      - dbt_expectations.expect_table_row_count_to_be_between:
+          arguments:
+            min_value: 1
+      - dbt_expectations.expect_column_values_to_not_be_null:
+          arguments:
+            column_name: codigo
+```
 ---
 <a name="setup"/>
 
-### ⚙️ Setup do Ambiente de Desenvolvimento Local
+## ⚙️ Instruções para Execução Local]
 
 <a name="setup1"/>
 
-#### 1. Pré-requisitos
+### 1. Pré-requisitos
 
 - Instalar e ativar **Docker Desktop**
 - Instalar **Python 3.10**
@@ -49,7 +114,7 @@ utilizando **Prefect 1.4.1** e **Google Cloud (GCS + BigQuery)** para ingestão,
 
 <a name="setup2"/>
 
-#### 2. Criação do ambiente virtual
+### 2. Criação do ambiente virtual
 
 ```bash
 python3.10 -m venv venv
@@ -57,7 +122,7 @@ source venv/bin/activate
 ```
 <a name="setup3"/>
 
-#### 3. Instalar dependências
+### 3. Instalar dependências
 
 As versões foram fixadas para garantir compatibilidade com Prefect 1.4.1 e macOS ARM.
 Instale as dependências a partir do arquivo requirements.txt:
@@ -68,7 +133,7 @@ pip install -r requirements.txt --no-deps
 ```
 <a name="setup4"/>
 
-#### 4. Configuração do Docker 
+### 4. Configuração do Docker 
 
 Linux:
 ```bash
@@ -87,14 +152,14 @@ Verifique se o Docker está acessível:
 docker ps
 ```
 
-Se o comando listar containers, o daemon do Docker está ativo e acessível ✅.
+Se o comando listar containers, o daemon do Docker está ativo e acessível.
 
-💡 Dica: adicione o comando de export DOCKER_HOST ao seu ~/.zshrc (macOS) ou ~/.bashrc (Linux)
+Dica: adicione o comando de export DOCKER_HOST ao seu ~/.zshrc (macOS) ou ~/.bashrc (Linux)
 para que a configuração seja carregada automaticamente em novos terminais.
 
 <a name="setup5"/>
 
-#### 5. Subir o Prefect Server Local e Iniciar o server
+### 5. Subir o Prefect Server Local e Iniciar o server
 
 Execute:
 ```
@@ -110,7 +175,7 @@ Visit http://localhost:8080 to get started, or check out the docs at https://doc
 ```
 <a name="setup6"/>
 
-#### 6. Variáveis de ambiente e credenciais GCP
+### 6. Variáveis de ambiente e credenciais GCP
 
 Para rodar localmente, copie o arquivo .env.example para .env e atualize os valores conforme sua configuração:
 ```
@@ -121,7 +186,16 @@ GOOGLE_APPLICATION_CREDENTIALS=/Users/<usuario>/desafio-civitas-brt-ari/prefect-
 
 Caso não possua acesso ao GCP, é possível testar o pipeline apenas até a geração dos arquivos CSV locais.
 
-🔐 Configuração de credenciais GCP para o DBT e Prefect
+<a name="setup7"/>
+
+### 7. ▶️ Rodar o flow principal
+
+Para rodar o fluxo principal, assumindo que você ainda está no ambiente virtual `venv/bin/activate` iniciado [acima](#setup2), execute:
+```
+python src/schedule.py
+```
+<a name="setup8"/>
+### 8. Configuração de credenciais GCP para o DBT e Prefect
 
 Tanto o Prefect quanto o DBT utilizam a mesma conta de serviço (Service Account)
 para acessar o Google Cloud Storage (GCS) e o BigQuery.
@@ -134,9 +208,11 @@ Isso garante segurança e portabilidade, evitando caminhos hardcoded.
 
 Antes de rodar o DBT, carregue o .env:
 ```
-source venv310/bin/activate
+source venv/bin/activate
 export $(grep -v '^#' .env | xargs)
 ```
+<a name="setup9"/>
+### 9. Executar o DBT
 
 Em seguida, execute:
 ```
@@ -144,7 +220,9 @@ cd dbt_project
 dbt run
 dbt test
 ```
+Isso criará uma view no Big Query com as tabelas 
 ℹ️ Todas as variáveis de ambiente (GCP, Prefect e DBT) são centralizadas no arquivo .env para garantir segurança e facilidade de configuração.
+
 
 
 
