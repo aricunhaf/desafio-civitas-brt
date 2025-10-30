@@ -17,7 +17,7 @@ utilizando **Prefect 1.4.1** e **Google Cloud (GCS + BigQuery)** para ingestão,
   - [Estrutura de Diretórios](#directories)
   - [Camadas de modelagem](#model)
   - [Documentação e Testes](#docs)
-- [Setup do Ambiente de Desenvolvimento Local](#setup)
+- [Instruções para Execução Local](#setup)
   - [1. Pré-requisitos](#setup1)
   - [2. Criação do ambiente virtual](#setup2)
   - [3. Instalar dependências](#setup3)
@@ -99,7 +99,7 @@ models:
 ---
 <a name="setup"/>
 
-## ⚙️ Setup do Ambiente de Desenvolvimento Local
+## ⚙️ Instruções para Execução Local]
 
 <a name="setup1"/>
 
@@ -186,7 +186,16 @@ GOOGLE_APPLICATION_CREDENTIALS=/Users/<usuario>/desafio-civitas-brt-ari/prefect-
 
 Caso não possua acesso ao GCP, é possível testar o pipeline apenas até a geração dos arquivos CSV locais.
 
-#### Configuração de credenciais GCP para o DBT e Prefect
+<a name="setup7"/>
+
+### 7. ▶️ Rodar o flow principal
+
+Para rodar o fluxo principal, assumindo que você ainda está no ambiente virtual `venv/bin/activate` iniciado [acima](#setup2), execute:
+```
+python src/schedule.py
+```
+<a name="setup8"/>
+### 8. Configuração de credenciais GCP para o DBT e Prefect
 
 Tanto o Prefect quanto o DBT utilizam a mesma conta de serviço (Service Account)
 para acessar o Google Cloud Storage (GCS) e o BigQuery.
@@ -199,9 +208,11 @@ Isso garante segurança e portabilidade, evitando caminhos hardcoded.
 
 Antes de rodar o DBT, carregue o .env:
 ```
-source venv310/bin/activate
+source venv/bin/activate
 export $(grep -v '^#' .env | xargs)
 ```
+<a name="setup9"/>
+### 9. Executar o DBT
 
 Em seguida, execute:
 ```
@@ -209,7 +220,9 @@ cd dbt_project
 dbt run
 dbt test
 ```
+Isso criará uma view no Big Query com as tabelas 
 ℹ️ Todas as variáveis de ambiente (GCP, Prefect e DBT) são centralizadas no arquivo .env para garantir segurança e facilidade de configuração.
+
 
 
 
