@@ -24,6 +24,9 @@ utilizando **Prefect 1.4.1** e **Google Cloud (GCS + BigQuery)** para ingestão,
   - [4. Configuração do Docker](#setup4)
   - [5. Subir o Prefect Server Local e Iniciar o server](#setup5)
   - [6. Variáveis de ambiente e credenciais GCP](#setup6)
+  - [7. Rodar o flow principal](#setup7)
+  - [8. Configuração de credenciais GCP para o DBT e Prefect](#setup8)
+  - [9. Executar o DBT](#setup9)
 
 ---
 <a name="tools"/>
@@ -188,7 +191,7 @@ Caso não possua acesso ao GCP, é possível testar o pipeline apenas até a ger
 
 <a name="setup7"/>
 
-### 7. ▶️ Rodar o flow principal
+### 7. Rodar o flow principal
 
 Para rodar o fluxo principal, assumindo que você ainda está no ambiente virtual `venv/bin/activate` iniciado [acima](#setup2), execute:
 ```
